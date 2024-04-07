@@ -1,15 +1,53 @@
 {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["name", "email"],
+        "required": ["title", "description", "name", "email"],
         "properties": {
+            "title": {
+                "bsonType": "string",
+                "description": "the title of a task must be determined",
+                "uniqueItems": true
+            },
+            "description": {
+                "bsonType": "string",
+                "description": "the description of a task must be determined"
+            },
+            "startdate": {
+                "bsonType": "date"
+            },
+            "duedate": {
+                "bsonType": "date"
+            },
+            "requires": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "objectId"
+                }
+            },
+            "categories": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "string"
+                }
+            },
+            "todos": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "objectId"
+                }
+            },
+            "video": {
+                "bsonType": "objectId"
+            },
             "name": {
                 "bsonType": "string",
-                "description": "must be a string and is required"
+                "maxLength": 50,
+                "description": "must be a string with a maximum length of 50 characters and is required"
             },
             "email": {
                 "bsonType": "string",
-                "description": "must be a string and is required"
+                "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                "description": "must be a valid email format and is required"
             }
         }
     }

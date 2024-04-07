@@ -57,3 +57,39 @@ def test_create_unique_constraint_violation(mock_dao):
 
     with pytest.raises(WriteError):
         dao.create(duplicate_data)
+
+
+# BVA: Test Field Lengths
+def test_field_lengths_bva(mock_dao):
+    dao, _ = mock_dao
+    # Assuming name has a max length of 50 characters
+    name_just_under = 'a' * 49
+    name_at_limit = 'a' * 50
+    name_just_over = 'a' * 51
+
+    valid_email = "test@example.com"
+
+    # Just under limit
+    assert dao.create({"name": name_just_under, "email": valid_email})
+    
+    # At limit
+    assert dao.create({"name": name_at_limit, "email": valid_email})
+
+    # Just over limit - assuming it should fail
+    with pytest.raises(WriteError):
+        dao.create({"name": name_just_over, "email": valid_email})
+
+# EP: Test Mixed Data
+def test_mixed_data_ep(mock_dao):
+    dao, _ = mock_dao
+    # Valid name, invalid email
+    mixed_data1 = {"name": "Valid Name", "email": "invalidemail"}
+
+    # Invalid name, valid email
+    mixed_data2 = {"name": "", "email": "valid@example.com"}
+
+    with pytest.raises(WriteError):
+        dao.create(mixed_data1)
+    
+    with pytest.raises(WriteError):
+        dao.create(mixed_data2)
