@@ -22,7 +22,6 @@ describe('Task Creation Workflow', () => {
                         description: "Cypress Song",
                         url: "dQw4w9WgXcQ",
                         userid: uid,
-
                         todos: "watch video"
                     };
     

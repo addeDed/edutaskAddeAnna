@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, abort, request
+from flask import Blueprint, jsonify, abort, request, current_app
 from flask_cors import cross_origin
 
 from pymongo.errors import WriteError
@@ -18,6 +18,11 @@ task_blueprint = Blueprint('task_blueprint', __name__)
 def create():
     try:
         data = request.form.to_dict(flat=False)
+
+
+        # Log the received data
+        print("Received data:", json.dumps(data))
+
         userid = data['userid'][0]
         # convert all non-array fields back to simple values
         for key in ['title', 'description', 'start', 'due', 'userid', 'url']:
@@ -25,9 +30,13 @@ def create():
                 data[key] = data[key][0]
 
         taskid = controller.create(data)
+
+        
+
         tasks = controller.get_tasks_of_user(userid)
         return jsonify(tasks), 200
     except WriteError as e:
+        current_app.logger.error(f'Error writing to the database: {str(e)}')
         abort(400, 'Invalid input data')
     except Exception as e:
         print(f'{e.__class__.__name__}: {e}')
