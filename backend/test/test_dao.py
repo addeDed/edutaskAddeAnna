@@ -1,25 +1,33 @@
 import pytest
-from src.util.dao import DAO
-from pymongo.errors import WriteError, ServerSelectionTimeoutError
+from pymongo.errors import WriteError
 from unittest.mock import patch, MagicMock
+import datetime
+# Corrected import path for the DAO class
+from src.util.dao import DAO
 
-# Fixture for setting up the DAO object and mocking the database interactions
-@pytest.fixture
-def mock_dao():
-    with patch('pymongo.MongoClient') as mock_client:
-        # Setup mock database and collection
+# Setup for all tests, ensuring each collection and its validator is correctly mocked
+@pytest.fixture(scope="module")
+def setup_dao():
+    with patch('src.util.dao.pymongo.MongoClient') as mock_client:
         mock_db = mock_client.return_value.edutask
-        mock_collection = mock_db.test_collection
+        collections = {
+            'task': mock_db.task_collection,
+            'todo': mock_db.todo_collection,
+            'video': mock_db.video_collection
+        }
 
-        # Instantiate DAO with mocked collection
-        dao = DAO('test_collection')
-        dao.collection = mock_collection
-        yield dao, mock_collection
+        daos = {}
+        for name, collection in collections.items():
+            dao = DAO(name)
+            dao.collection = collection
+            daos[name] = (dao, collection)
+        
+        yield daos
 
-# Test for successful insertion of valid data
-def test_create_valid_data(mock_dao):
-    dao, mock_collection = mock_dao
-    valid_data = {"name": "John Doe", "email": "john@example.com"}
+# Task Collection Tests
+def test_task_valid_data(setup_dao):
+    dao, mock_collection = setup_dao['task']
+    valid_data = {"title": "Task 1", "description": "Complete this task", "startdate": "2023-01-01", "duedate": "2023-01-15"}
     fake_id = "fake_id"
     mock_collection.insert_one.return_value = MagicMock(inserted_id=fake_id)
     mock_collection.find_one.return_value = valid_data.copy()
@@ -27,69 +35,64 @@ def test_create_valid_data(mock_dao):
 
     result = dao.create(valid_data)
 
-    assert "_id" in result, "Result should contain the '_id' key"
-    assert result["_id"] == fake_id, "The '_id' key should have the value 'fake_id'"
+    assert "_id" in result
+    assert result["_id"] == fake_id
     mock_collection.insert_one.assert_called_once_with(valid_data)
     mock_collection.find_one.assert_called_once_with({'_id': fake_id})
 
-# Test for insertion with invalid data
-def test_create_invalid_data(mock_dao):
-    dao, mock_collection = mock_dao
-    invalid_data = {"email": "john@example.com"}  # Missing 'name'
-    mock_collection.insert_one.side_effect = WriteError("Invalid data")
-    
+def test_task_missing_required_fields(setup_dao):
+    dao, mock_collection = setup_dao['task']
+    incomplete_data = {"description": "Incomplete task"}
+    mock_collection.insert_one.side_effect = WriteError("Missing required field: title")
+
+    with pytest.raises(WriteError):
+        dao.create(incomplete_data)
+
+# Todo Collection Tests - Focused on schema-defined constraints
+def test_todo_valid_data(setup_dao):
+    dao, mock_collection = setup_dao['todo']
+    valid_data = {"description": "Finish assignment", "done": True}
+    fake_id = "fake_id"
+    mock_collection.insert_one.return_value = MagicMock(inserted_id=fake_id)
+    mock_collection.find_one.return_value = valid_data.copy()
+    mock_collection.find_one.return_value["_id"] = fake_id
+
+    result = dao.create(valid_data)
+
+    assert "_id" in result
+    assert result["_id"] == fake_id
+    mock_collection.insert_one.assert_called_once_with(valid_data)
+
+def test_todo_incorrect_data_type(setup_dao):
+    dao, mock_collection = setup_dao['todo']
+    invalid_data = {"description": 123, "done": "Yes"}
+    mock_collection.insert_one.side_effect = WriteError("Data type mismatch for 'done'")
+
     with pytest.raises(WriteError):
         dao.create(invalid_data)
 
-# Test for insertion with database unavailable
-def test_create_database_unavailable(mock_dao):
-    dao, mock_collection = mock_dao
-    mock_collection.insert_one.side_effect = ServerSelectionTimeoutError("Database unavailable")
-    
-    with pytest.raises(ServerSelectionTimeoutError):
-        dao.create({"name": "Jane Doe", "email": "jane@example.com"})
+# Video Collection Tests - Corrected for schema compliance
+def test_video_valid_data(setup_dao):
+    dao, mock_collection = setup_dao['video']
+    valid_data = {"url": "http://example.com/video.mp4"}
+    fake_id = "fake_id"
+    mock_collection.insert_one.return_value = MagicMock(inserted_id=fake_id)
+    mock_collection.find_one.return_value = valid_data.copy()
+    mock_collection.find_one.return_value["_id"] = fake_id
 
-# Test for insertion with unique constraint violation
-def test_create_unique_constraint_violation(mock_dao):
-    dao, mock_collection = mock_dao
-    duplicate_data = {"name": "John Doe", "email": "john@example.com"}  # Duplicate email
-    mock_collection.insert_one.side_effect = WriteError("Duplicate key error")
+    result = dao.create(valid_data)
 
-    with pytest.raises(WriteError):
-        dao.create(duplicate_data)
+    assert "_id" in result
+    assert result["_id"] == fake_id
+    mock_collection.insert_one.assert_called_once_with(valid_data)
 
-
-# BVA: Test Field Lengths
-def test_field_lengths_bva(mock_dao):
-    dao, _ = mock_dao
-    # Assuming name has a max length of 50 characters
-    name_just_under = 'a' * 49
-    name_at_limit = 'a' * 50
-    name_just_over = 'a' * 51
-
-    valid_email = "test@example.com"
-
-    # Just under limit
-    assert dao.create({"name": name_just_under, "email": valid_email})
-    
-    # At limit
-    assert dao.create({"name": name_at_limit, "email": valid_email})
-
-    # Just over limit - assuming it should fail
-    with pytest.raises(WriteError):
-        dao.create({"name": name_just_over, "email": valid_email})
-
-# EP: Test Mixed Data
-def test_mixed_data_ep(mock_dao):
-    dao, _ = mock_dao
-    # Valid name, invalid email
-    mixed_data1 = {"name": "Valid Name", "email": "invalidemail"}
-
-    # Invalid name, valid email
-    mixed_data2 = {"name": "", "email": "valid@example.com"}
-
-    with pytest.raises(WriteError):
-        dao.create(mixed_data1)
+def test_video_empty_url(setup_dao):
+    dao, mock_collection = setup_dao['video']
+    empty_url_data = {"url": ""}
+    mock_collection.insert_one.side_effect = WriteError("URL cannot be empty")
     
     with pytest.raises(WriteError):
-        dao.create(mixed_data2)
+        dao.create(empty_url_data)
+
+
+
