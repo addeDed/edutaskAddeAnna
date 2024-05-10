@@ -1,4 +1,5 @@
 import json
+import logging
 
 validators = {}
 def getValidator(collection_name: str):
@@ -11,6 +12,9 @@ def getValidator(collection_name: str):
         validator -- dict in the format of a MongoDB collection validator
     """
     if collection_name not in validators:
+        logging.debug(f"Loading validator for collection: {collection_name}")
         with open(f'./src/static/validators/{collection_name}.json', 'r') as f:
             validators[collection_name] = json.load(f)
+    else:
+            logging.debug(f"Validator for collection {collection_name} already loaded.")
     return validators[collection_name]

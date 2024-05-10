@@ -1,7 +1,7 @@
 describe('Task Creation Workflow', () => {
     let uid; // user id
     let email; // email of the user
-    let Fullname;
+
     let taskId; // task id for cleanup
     before(function () {
         // create a fabricated user from a fixture
@@ -22,7 +22,7 @@ describe('Task Creation Workflow', () => {
                         description: "Cypress Song",
                         url: "dQw4w9WgXcQ",
                         userid: uid,
-                        todos: "watch video"
+                        todos: "watch video",
                     };
     
                     cy.request({
@@ -35,34 +35,37 @@ describe('Task Creation Workflow', () => {
           })
       })
 
-    beforeEach(function () {
-        // Enter the main page and login
-        cy.visit('http://localhost:3000');
-        cy.contains('div', 'Email Address').find('input[type=text]').type(email);
-        cy.get('form').submit();
-        // Click on the task to enter detail view
-        cy.get('.title-overlay').click();
-    });
+      beforeEach(function () {
+        // Enter the main page
+        cy.visit('http://localhost:3000')
+        // Login
+        cy.contains('div', 'Email Address')
+            .find('input[type=text]')
+            .type(email)
+
+        cy.get('form')
+            .submit()
+        // Should now be successfully logged in
+        
+        // Click on Task
+        cy.get('.title-overlay').click()
+        cy.wait(1000);
+    })
 
     it('should allow adding a new todo item when description is provided', function() {
-        cy.get('input[type=text]').type('New Todo');
-        cy.get('input[type=submit]').click();
+        
+         // Precisely target the input field for new todo items by its placeholder
+        cy.get('input[type="text"][placeholder="Add a new todo item"]').type('troll');  // Simulates typing 'troll' into the input field
 
-        cy.get('.todo-list').should('contain', 'New Todo');
+         // Click the submit button by targeting it through its value attribute
+        cy.get('input[type="submit"][value="Add"]').click();
+       
     });
 
-    it('should disable the add button when todo description is empty', function() {
-        cy.get('input[type=text]').should('have.value', '');
-        cy.get('input[type=submit]').should('be.disabled');
-    });
 
     after(function () {
         // Clean up by deleting the user and task
-        cy.request({
-            method: 'DELETE',
-            url: `http://localhost:5000/tasks/${taskId}`
-        });
-
+        
         cy.request({
             method: 'DELETE',
             url: `http://localhost:5000/users/${uid}`

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from src.controllers.controller import Controller
 from src.util.dao import DAO
+import json
 
 class TaskController(Controller):
     def __init__(self, tasks_dao: DAO, videos_dao: DAO, todos_dao: DAO, users_dao: DAO):
@@ -24,6 +25,10 @@ class TaskController(Controller):
             KeyError -- in case an important key is missing in the data dict
             Exception -- in case any database operation fails
         """
+
+        # Log the received data
+        print("Received data:", json.dumps(data))
+
 
         # store the userid
         if 'userid' not in data:
