@@ -43,4 +43,4 @@ class UserController(Controller):
             update_result = super().update(id=id, data={'$set': data})
             return update_result
         except Exception as e:
-            raise
+            raise 

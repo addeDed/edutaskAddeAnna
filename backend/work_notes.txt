@@ -1,0 +1,4 @@
+
+export PYTHONPATH=~/dbwebb-kurser/sysver/edutaskAddeAnna/backend:$PYTHONPATH
+
+python3 -m pytest -s test/test_usercontroller.py
