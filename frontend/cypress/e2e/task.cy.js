@@ -53,13 +53,23 @@ describe('Task Creation Workflow', () => {
     })
 
     it('should allow adding a new todo item when description is provided', function() {
-        
-         // Precisely target the input field for new todo items by its placeholder
-        cy.get('input[type="text"][placeholder="Add a new todo item"]').type('troll');  // Simulates typing 'troll' into the input field
-
-         // Click the submit button by targeting it through its value attribute
+        cy.get('input[type="text"][placeholder="Add a new todo item"]').type('New Todo');
         cy.get('input[type="submit"][value="Add"]').click();
-       
+        cy.get('.todo-list').should('contain', 'New Todo');
+    });
+
+    it('should toggle the status of the first todo item when clicked', function() {
+        // Clicks the first toggle element
+        cy.get('.todo-list .todo-item .checker').first().click();
+        cy.wait(1000); // Wait for any asynchronous updates to complete
+    
+        // Check that the first checker has 'checked' class, indicating the item is "done"
+        cy.get('.todo-list .todo-item .checker').first().should('have.class', 'checked');
+    });
+    
+    it('should delete a todo item when delete icon is clicked', function() {
+        cy.get('.todo-list .todo-item .remover').first().click(); // Clicks the delete icon of the first todo item.
+        cy.get('.todo-list').should('not.contain', 'Initial Todo'); // Checks if the item is removed from the list.
     });
 
 
