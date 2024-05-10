@@ -52,6 +52,29 @@ describe('Task Creation Workflow', () => {
         cy.wait(1000);
     })
 
+
+    it('should keep "Add" button disabled when description is empty', function() {
+        cy.get('input[type="text"][placeholder="Add a new todo item"]').clear();
+        // Check if the "Add" button is disabled
+        cy.get('input[type="submit"][value="Add"]').should('be.disabled');
+    });
+
+    it('should toggle the status of the first todo item when clicked and then toggle back', function() {
+
+        cy.get('.todo-list .todo-item .checker').first().as('firstToggle');
+    
+        // First click: Toggle from active to done
+        cy.get('@firstToggle').click();
+        cy.wait(1000); // Wait for any asynchronous updates to complete
+        cy.get('@firstToggle').should('have.class', 'checked', {timeout: 1000}); // Checks if the item is "done"
+    
+        // Second click: Toggle from done to active
+        cy.get('@firstToggle').click();
+        cy.wait(1000); // Ensure state change is processed
+        cy.get('@firstToggle').should('not.have.class', 'checked', {timeout: 1000}); // Checks if the item is "active" again
+    });
+
+
     it('should allow adding a new todo item when description is provided', function() {
         cy.get('input[type="text"][placeholder="Add a new todo item"]').type('New Todo');
         cy.get('input[type="submit"][value="Add"]').click();
@@ -66,7 +89,8 @@ describe('Task Creation Workflow', () => {
         // Check that the first checker has 'checked' class, indicating the item is "done"
         cy.get('.todo-list .todo-item .checker').first().should('have.class', 'checked');
     });
-    
+
+
     it('should delete a todo item when delete icon is clicked', function() {
         cy.get('.todo-list .todo-item .remover').first().click(); // Clicks the delete icon of the first todo item.
         cy.get('.todo-list').should('not.contain', 'Initial Todo'); // Checks if the item is removed from the list.
