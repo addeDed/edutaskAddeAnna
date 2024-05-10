@@ -125,3 +125,58 @@ def test_create_uniqueness_violation(setup_dao):
     
     with pytest.raises(WriteError):
         dao.create(duplicate_data)
+
+def test_create_non_unique_data(setup_dao):
+    dao = setup_dao
+    non_unique_data = {
+        "title": "Complete the project",
+        "description": "Ensure everything is tested",
+        "startdate": datetime.datetime.now(),
+        "duedate": datetime.datetime.now() + datetime.timedelta(days=10)
+    }
+    # Mock WriteError for non-unique data
+    dao.collection.insert_one.side_effect = WriteError("Non-unique data")
+    
+    with pytest.raises(WriteError):
+        dao.create(non_unique_data)
+
+def test_create_incorrect_data_types(setup_dao):
+    dao = setup_dao
+    incorrect_data_types = {
+        "title": "Complete the project",
+        "description": 123,  # Incorrect data type (int instead of string)
+        "startdate": datetime.datetime.now(),
+        "duedate": datetime.datetime.now() + datetime.timedelta(days=10)
+    }
+    # Mock WriteError for incorrect data types
+    dao.collection.insert_one.side_effect = WriteError("Incorrect data types")
+    
+    with pytest.raises(WriteError):
+        dao.create(incorrect_data_types)
+
+def test_create_incorrect_data_types_no_uniqueness(setup_dao):
+    dao = setup_dao
+    incorrect_data_types_no_uniqueness = {
+        "title": "Complete the project",
+        "description": 123,  # Incorrect data type (int instead of string)
+        "startdate": datetime.datetime.now(),
+        "duedate": datetime.datetime.now() + datetime.timedelta(days=10)
+    }
+    # Mock WriteError for incorrect data types
+    dao.collection.insert_one.side_effect = WriteError("Incorrect data types")
+    
+    with pytest.raises(WriteError):
+        dao.create(incorrect_data_types_no_uniqueness)
+
+def test_create_missing_fields(setup_dao):
+    dao = setup_dao
+    missing_fields_data = {
+        "description": "Ensure everything is tested",
+        "startdate": datetime.datetime.now(),
+        "duedate": datetime.datetime.now() + datetime.timedelta(days=10)
+    }
+    # Mock WriteError for missing fields
+    dao.collection.insert_one.side_effect = WriteError("Missing fields")
+    
+    with pytest.raises(WriteError):
+        dao.create(missing_fields_data)
