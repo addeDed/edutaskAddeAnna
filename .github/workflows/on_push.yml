@@ -1,5 +1,5 @@
 # full file path ./workflows/on_push.yml
-name: On push - perform test Workflow
+name: On push - perform pytest Workflow
 
 on: push
 
@@ -17,4 +17,4 @@ jobs:
         pip install -r backend/requirements.pip
 
     - name : Run tests
-      run : pytest -m unit
+      run : pytest backend/ -m unit --cov=.
