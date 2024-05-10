@@ -6,6 +6,7 @@ import pytest
 from src.controllers.usercontroller import UserController
 from src.util.dao import DAO
 
+@pytest.mark.unit
 class TestUserController:
     '''
     TestUserController class docstring
