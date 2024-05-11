@@ -4,7 +4,7 @@ test module docstring
 
 import pytest
 from src.controllers.usercontroller import UserController
-from src.util.dao import DAO
+#from src.util.dao import DAO
 
 @pytest.mark.unit
 class TestUserController:
@@ -12,36 +12,38 @@ class TestUserController:
     TestUserController class docstring
     '''
 # TEST 1
-    def test_invalid_email_format(self, mocker):
+    @pytest.mark.parametrize("test_input,expected",
+                             [('invalidemail.com',False),
+                              ('invalid.email.com',False),
+                              ('invalidemail@',False),
+                              ('@invalidemail.com',False),
+                              ('invalidemail@.com',False),
+                              ('invalidemail@domain',False),
+                              ('invalid email@example.com',False),
+                              ('invalid!email@example.com',False),
+                              ('invalidemail',False),
+                              ('valid@email.com',True)
+                             ]
+                            )
+    def test_invalid_email_format(self, mocker, test_input, expected):
         """
-        Test the behavior of the get_user_by_email method when provided with different email formats.
+        Test the behavior of the get_user_by_email method when provided with different
+        email formats.
         It should raise a ValueError for each invalid email format.
         """
-        # List of invalid email formats to test
-        emails = [
-            'invalidemail.com',
-            'invalid.email.com',
-            'invalidemail@',
-            '@invalidemail.com',
-            'invalidemail@.com',
-            'invalidemail@domain',
-            'invalid email@example.com',
-            'invalid!email@example.com',
-            'invalidemail',
-            'valid@email.com'
-        ]
-
         dao_mock = mocker.MagicMock()
-        dao_mock.find.return_value = [{'email': 'test@example.com'}]
         controller = UserController(dao=dao_mock)
 
-        # Loop through each invalid email format and test
-        for email in emails:
-            try:
-                controller.get_user_by_email(email)
-                print("No error raised for ", email)
-            except ValueError as e:
-                print(f"ValueError raised: {e} for ", email)
+        dao_mock.find.return_value = [{'email': test_input}]
+        try:
+            controller.get_user_by_email(test_input)
+            print("No error raised for ", test_input)
+            assert True == expected
+        except ValueError as exept:
+            print("ValueError raised for ", test_input)
+            assert False == expected
+        
+        #dao_mock.find.return_value = [{'email': 'test@example.com'}]
 
 # TEST 2a
     def test_query_database_for_user(self, mocker):
@@ -151,7 +153,6 @@ class TestUserController:
     def test_user_without_entry(self, mocker):
         """
         Test the behavior of the get_user_by_email method when provided with an email address that does not have any entry in the database.
-        org - It should return an empty list.
         updated - It should return None (not implemented in function)
         """
         dao_mock = mocker.MagicMock()
@@ -159,9 +160,10 @@ class TestUserController:
         dao_mock.find.return_value = []
         try:
             result = controller.get_user_by_email('user3@example.com')
-            assert result == None
         except Exception as exept:
-            assert 'IndexError' in f"Unexpected exception type: {type(exept).__name__}"
+            print("Unexpected exception type:",type(exept).__name__)
+            result = 'AssertionError'
+        assert result == None
 
 # TEST 4
     def test_get_user_by_email_database_failure(self, mocker):

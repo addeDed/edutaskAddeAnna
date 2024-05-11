@@ -17,4 +17,4 @@ jobs:
         pip install -r backend/requirements.pip
 
     - name : Run tests
-      run : pytest backend/test/test_usercontroller.py -m unit
+      run : pytest pytest -s backend/test
