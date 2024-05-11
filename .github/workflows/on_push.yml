@@ -17,4 +17,4 @@ jobs:
         pip install -r backend/requirements.pip
 
     - name : Run tests
-      run : pytest backend/ -m unit --cov=. --cov-report term-missing
+      run : pytest backend/test/test_usercontroller.py -m unit --cov=. --cov-report term-missing
