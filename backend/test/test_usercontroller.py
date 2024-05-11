@@ -37,10 +37,10 @@ class TestUserController:
         dao_mock.find.return_value = [{'email': test_input}]
         try:
             controller.get_user_by_email(test_input)
-            print("No error raised for ", test_input)
+            #print("No error raised for ", test_input)
             assert expected == True
         except ValueError:
-            print("ValueError raised for ", test_input)
+            #print("ValueError raised for ", test_input)
             assert expected == False
 
         #dao_mock.find.return_value = [{'email': 'test@example.com'}]
